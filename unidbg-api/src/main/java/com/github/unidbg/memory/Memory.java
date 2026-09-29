@@ -19,6 +19,15 @@ public interface Memory extends IO, Loader, StackMemory {
 
     long MMAP_BASE = 0x12000000L;//0x1fffe180e , limited by MMIO_TRAP_ADDRESS
 
+    int PROT_NONE = 0x00;
+    int PROT_READ = 0x01;
+    int PROT_WRITE = 0x02;
+    int PROT_EXEC = 0x04;
+
+    int MAP_PRIVATE = 0x02;
+    int MAP_FIXED = 0x10;
+    int MAP_ANONYMOUS = 0x20;
+
     int allocateThreadIndex();
     void freeThreadIndex(int index);
     UnidbgPointer allocateThreadStack(int index);

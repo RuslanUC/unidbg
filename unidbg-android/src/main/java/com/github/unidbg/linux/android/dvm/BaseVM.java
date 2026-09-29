@@ -8,6 +8,9 @@ import com.github.unidbg.linux.android.ElfLibraryRawFile;
 import com.github.unidbg.linux.android.dvm.apk.Apk;
 import com.github.unidbg.linux.android.dvm.apk.ApkFactory;
 import com.github.unidbg.linux.android.dvm.apk.AssetResolver;
+import com.github.unidbg.memory.Memory;
+import com.github.unidbg.memory.MemoryBlock;
+import com.github.unidbg.pointer.UnidbgPointer;
 import com.github.unidbg.spi.LibraryFile;
 import net.dongliu.apk.parser.bean.CertificateMeta;
 import org.slf4j.Logger;
@@ -382,5 +385,28 @@ public abstract class BaseVM implements VM, DvmClassFactory {
     @Override
     public Emulator<?> getEmulator() {
         return emulator;
+    }
+
+    // This is probably wrong place for this
+
+    private static final int methodsAndFieldsNativeBlockSize = 1024 * 1024;
+    private static final int methodsAndFieldsNativeItemSize = 0x40;
+    private static final int methodsAndFieldsNativeBlocksCount = 0x40;
+    private static final int methodsAndFieldsNativePerBlock = methodsAndFieldsNativeBlockSize / methodsAndFieldsNativeItemSize;
+    private final long[] methodsAndFieldsNative = new long[methodsAndFieldsNativeBlocksCount];
+    private int currentMethodFieldBlock = 0;
+    private int lastMethodFieldId = 0;
+
+    public synchronized long allocateMethodOrFieldSlot() {
+        if(lastMethodFieldId == (methodsAndFieldsNativePerBlock - 1)) {
+            if(++currentMethodFieldBlock == methodsAndFieldsNative.length)
+                throw new RuntimeException("Too much methods/fields");
+            lastMethodFieldId = 0;
+        }
+        if(methodsAndFieldsNative[currentMethodFieldBlock] == 0L) {
+            methodsAndFieldsNative[currentMethodFieldBlock] = getEmulator().getMemory().mmap2(0, methodsAndFieldsNativeBlockSize, Memory.PROT_READ | Memory.PROT_WRITE, Memory.MAP_ANONYMOUS, -1, 0);
+        }
+
+        return methodsAndFieldsNative[currentMethodFieldBlock] + (long) (lastMethodFieldId++) * methodsAndFieldsNativeItemSize;
     }
 }

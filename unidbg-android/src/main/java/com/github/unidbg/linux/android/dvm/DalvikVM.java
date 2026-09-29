@@ -501,9 +501,9 @@ public class DalvikVM extends BaseVM implements VM {
                 if (dvmClass == null) {
                     throw new BackendException();
                 } else {
-                    int hash = dvmClass.getMethodID(name, args);
+                    int hash = (int)(dvmClass.getMethodID(name, args) & 0xffffffffL);
                     if (verbose && hash != 0) {
-                        System.out.printf("JNIEnv->GetMethodID(%s.%s%s) => 0x%x was called from %s%n", dvmClass.getClassName(), name, args, hash & 0xffffffffL, context.getLRPointer());
+                        System.out.printf("JNIEnv->GetMethodID(%s.%s%s) => 0x%x was called from %s%n", dvmClass.getClassName(), name, args, hash, context.getLRPointer());
                     }
                     return hash;
                 }
@@ -1384,9 +1384,9 @@ public class DalvikVM extends BaseVM implements VM {
                 if (dvmClass == null) {
                     throw new BackendException();
                 } else {
-                    int hash = dvmClass.getFieldID(name, args);
+                    int hash = (int)(dvmClass.getFieldID(name, args) & 0xffffffffL);
                     if (verbose && hash != 0) {
-                        System.out.printf("JNIEnv->GetFieldID(%s.%s %s) => 0x%x was called from %s%n", dvmClass.getClassName(), name, args, hash & 0xffffffffL, context.getLRPointer());
+                        System.out.printf("JNIEnv->GetFieldID(%s.%s %s) => 0x%x was called from %s%n", dvmClass.getClassName(), name, args, hash, context.getLRPointer());
                     }
                     return hash;
                 }
@@ -1741,9 +1741,9 @@ public class DalvikVM extends BaseVM implements VM {
                 if (dvmClass == null) {
                     throw new BackendException();
                 } else {
-                    int hash = dvmClass.getStaticMethodID(name, args);
+                    int hash = (int)(dvmClass.getStaticMethodID(name, args) & 0xffffffffL);
                     if (verbose && hash != 0) {
-                        System.out.printf("JNIEnv->GetStaticMethodID(%s.%s%s) => 0x%x was called from %s%n", dvmClass.getClassName(), name, args, hash & 0xffffffffL, context.getLRPointer());
+                        System.out.printf("JNIEnv->GetStaticMethodID(%s.%s%s) => 0x%x was called from %s%n", dvmClass.getClassName(), name, args, hash, context.getLRPointer());
                     }
                     return hash;
                 }
@@ -2252,9 +2252,9 @@ public class DalvikVM extends BaseVM implements VM {
                 if (dvmClass == null) {
                     throw new BackendException();
                 } else {
-                    int hash = dvmClass.getStaticFieldID(name, args);
+                    int hash = (int)(dvmClass.getStaticFieldID(name, args) & 0xffffffffL);
                     if (verbose && hash != 0) {
-                        System.out.printf("JNIEnv->GetStaticFieldID(%s.%s%s) => 0x%x was called from %s%n", dvmClass.getClassName(), name, args, hash & 0xffffffffL, context.getLRPointer());
+                        System.out.printf("JNIEnv->GetStaticFieldID(%s.%s%s) => 0x%x was called from %s%n", dvmClass.getClassName(), name, args, hash, context.getLRPointer());
                     }
                     return hash;
                 }

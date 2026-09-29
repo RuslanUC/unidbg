@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 
 public class DvmClass extends DvmObject<Class<?>> {
 
@@ -74,16 +75,17 @@ public class DvmClass extends DvmObject<Class<?>> {
         return checkJni(vm, this).allocObject(vm, this, signature);
     }
 
-    private final Map<Integer, DvmMethod> staticMethodMap = new HashMap<>();
+    private final Map<Long, DvmMethod> staticMethodMap = new HashMap<>();
+    private final Map<Integer, Long> methodStaticHashToId = new HashMap<>(4);
 
-    final DvmMethod getStaticMethod(int hash) {
-        DvmMethod method = staticMethodMap.get(hash);
+    final DvmMethod getStaticMethod(long id) {
+        DvmMethod method = staticMethodMap.get(id);
         if (method == null && superClass != null) {
-            method = superClass.getStaticMethod(hash);
+            method = superClass.getStaticMethod(id);
         }
         if (method == null) {
             for (DvmClass interfaceClass : interfaceClasses) {
-                method = interfaceClass.getStaticMethod(hash);
+                method = interfaceClass.getStaticMethod(id);
                 if (method != null) {
                     break;
                 }
@@ -92,32 +94,34 @@ public class DvmClass extends DvmObject<Class<?>> {
         return method;
     }
 
-    int getStaticMethodID(String methodName, String args) {
+    long getStaticMethodID(String methodName, String args) {
         String signature = getClassName() + "->" + methodName + args;
         int hash = vm.hash(signature);
+        long id = methodStaticHashToId.computeIfAbsent(hash, integer -> vm.allocateMethodOrFieldSlot());
         if (log.isDebugEnabled()) {
-            log.debug("getStaticMethodID signature={}, hash=0x{}", signature, Long.toHexString(hash));
+            log.debug("getStaticMethodID signature={}, hash=0x{}, id=0x{}", signature, Long.toHexString(hash), Long.toHexString(id));
         }
         if (checkJni(vm, this).acceptMethod(this, signature, true)) {
-            if (!staticMethodMap.containsKey(hash)) {
-                staticMethodMap.put(hash, new DvmMethod(this, methodName, args, true));
+            if (!staticMethodMap.containsKey(id)) {
+                staticMethodMap.put(id, new DvmMethod(this, methodName, args, true));
             }
-            return hash;
+            return id;
         } else {
             return 0;
         }
     }
 
-    private final Map<Integer, DvmMethod> methodMap = new HashMap<>();
+    private final Map<Long, DvmMethod> methodMap = new HashMap<>();
+    private final Map<Integer, Long> methodHashToId = new HashMap<>(4);
 
-    final DvmMethod getMethod(int hash) {
-        DvmMethod method = methodMap.get(hash);
+    final DvmMethod getMethod(long id) {
+        DvmMethod method = methodMap.get(id);
         if (method == null && superClass != null) {
-            method = superClass.getMethod(hash);
+            method = superClass.getMethod(id);
         }
         if (method == null) {
             for (DvmClass interfaceClass : interfaceClasses) {
-                method = interfaceClass.getMethod(hash);
+                method = interfaceClass.getMethod(id);
                 if (method != null) {
                     break;
                 }
@@ -126,32 +130,34 @@ public class DvmClass extends DvmObject<Class<?>> {
         return method;
     }
 
-    int getMethodID(String methodName, String args) {
+    long getMethodID(String methodName, String args) {
         String signature = getClassName() + "->" + methodName + args;
         int hash = vm.hash(signature);
+        long id = methodHashToId.computeIfAbsent(hash, integer -> vm.allocateMethodOrFieldSlot());
         if (log.isDebugEnabled()) {
-            log.debug("getMethodID signature={}, hash=0x{}", signature, Long.toHexString(hash));
+            log.debug("getMethodID signature={}, hash=0x{}, id=0x{}", signature, Long.toHexString(hash), Long.toHexString(id));
         }
         if (vm.jni == null || vm.jni.acceptMethod(this, signature, false)) {
-            if (!methodMap.containsKey(hash)) {
-                methodMap.put(hash, new DvmMethod(this, methodName, args, false));
+            if (!methodMap.containsKey(id)) {
+                methodMap.put(id, new DvmMethod(this, methodName, args, false));
             }
-            return hash;
+            return id;
         } else {
             return 0;
         }
     }
 
-    private final Map<Integer, DvmField> fieldMap = new HashMap<>();
+    private final Map<Long, DvmField> fieldMap = new HashMap<>();
+    private final Map<Integer, Long> fieldHashToId = new HashMap<>(4);
 
-    final DvmField getField(int hash) {
-        DvmField field = fieldMap.get(hash);
+    final DvmField getField(long id) {
+        DvmField field = fieldMap.get(id);
         if (field == null && superClass != null) {
-            field = superClass.getField(hash);
+            field = superClass.getField(id);
         }
         if (field == null) {
             for (DvmClass interfaceClass : interfaceClasses) {
-                field = interfaceClass.getField(hash);
+                field = interfaceClass.getField(id);
                 if (field != null) {
                     break;
                 }
@@ -160,32 +166,34 @@ public class DvmClass extends DvmObject<Class<?>> {
         return field;
     }
 
-    int getFieldID(String fieldName, String fieldType) {
+    long getFieldID(String fieldName, String fieldType) {
         String signature = getClassName() + "->" + fieldName + ":" + fieldType;
         int hash = vm.hash(signature);
+        long id = fieldHashToId.computeIfAbsent(hash, integer -> vm.allocateMethodOrFieldSlot());
         if (log.isDebugEnabled()) {
-            log.debug("getFieldID signature={}, hash=0x{}", signature, Long.toHexString(hash));
+            log.debug("getFieldID signature={}, hash=0x{}, id=0x{}", signature, Long.toHexString(hash), Long.toHexString(id));
         }
         if (vm.jni == null || vm.jni.acceptField(this, signature, false)) {
-            if (!fieldMap.containsKey(hash)) {
-                fieldMap.put(hash, new DvmField(this, fieldName, fieldType, false));
+            if (!fieldMap.containsKey(id)) {
+                fieldMap.put(id, new DvmField(this, fieldName, fieldType, false));
             }
-            return hash;
+            return id;
         } else {
             return 0;
         }
     }
 
-    private final Map<Integer, DvmField> staticFieldMap = new HashMap<>();
+    private final Map<Long, DvmField> staticFieldMap = new HashMap<>();
+    private final Map<Integer, Long> fieldStaticHashToId = new HashMap<>(4);
 
-    final DvmField getStaticField(int hash) {
-        DvmField field = staticFieldMap.get(hash);
+    final DvmField getStaticField(long id) {
+        DvmField field = staticFieldMap.get(id);
         if (field == null && superClass != null) {
-            field = superClass.getStaticField(hash);
+            field = superClass.getStaticField(id);
         }
         if (field == null) {
             for (DvmClass interfaceClass : interfaceClasses) {
-                field = interfaceClass.getStaticField(hash);
+                field = interfaceClass.getStaticField(id);
                 if (field != null) {
                     break;
                 }
@@ -194,17 +202,18 @@ public class DvmClass extends DvmObject<Class<?>> {
         return field;
     }
 
-    int getStaticFieldID(String fieldName, String fieldType) {
+    long getStaticFieldID(String fieldName, String fieldType) {
         String signature = getClassName() + "->" + fieldName + ":" + fieldType;
         int hash = vm.hash(signature);
+        long id = fieldStaticHashToId.computeIfAbsent(hash, integer -> vm.allocateMethodOrFieldSlot());
         if (log.isDebugEnabled()) {
-            log.debug("getStaticFieldID signature={}, hash=0x{}", signature, Long.toHexString(hash));
+            log.debug("getStaticFieldID signature={}, hash=0x{}, id=0x{}", signature, Long.toHexString(hash), Long.toHexString(id));
         }
         if (vm.jni == null || vm.jni.acceptField(this, signature, true)) {
-            if (!staticFieldMap.containsKey(hash)) {
-                staticFieldMap.put(hash, new DvmField(this, fieldName, fieldType, true));
+            if (!staticFieldMap.containsKey(id)) {
+                staticFieldMap.put(id, new DvmField(this, fieldName, fieldType, true));
             }
-            return hash;
+            return id;
         } else {
             return 0;
         }

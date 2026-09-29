@@ -107,9 +107,9 @@ public class DalvikVM64 extends BaseVM implements VM {
                 DvmClass dvmClass = classMap.get(clazz.toIntPeer());
                 DvmMethod dvmMethod = null;
                 if (dvmClass != null) {
-                    dvmMethod = dvmClass.getStaticMethod(jmethodID.toIntPeer());
+                    dvmMethod = dvmClass.getStaticMethod(jmethodID.peer);
                     if (dvmMethod == null) {
-                        dvmMethod = dvmClass.getMethod(jmethodID.toIntPeer());
+                        dvmMethod = dvmClass.getMethod(jmethodID.peer);
                     }
                 }
                 if (log.isDebugEnabled()) {
@@ -390,7 +390,7 @@ public class DalvikVM64 extends BaseVM implements VM {
                 UnidbgPointer clazz = context.getPointerArg(1);
                 UnidbgPointer jmethodID = context.getPointerArg(2);
                 DvmClass dvmClass = classMap.get(clazz.toIntPeer());
-                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getMethod(jmethodID.toIntPeer());
+                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getMethod(jmethodID.peer);
                 if (log.isDebugEnabled()) {
                     log.debug("NewObject clazz={}, jmethodID={}, lr={}", dvmClass, jmethodID, context.getLRPointer());
                 }
@@ -415,7 +415,7 @@ public class DalvikVM64 extends BaseVM implements VM {
                 UnidbgPointer jmethodID = context.getPointerArg(2);
                 UnidbgPointer va_list = context.getPointerArg(3);
                 DvmClass dvmClass = classMap.get(clazz.toIntPeer());
-                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getMethod(jmethodID.toIntPeer());
+                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getMethod(jmethodID.peer);
                 if (log.isDebugEnabled()) {
                     log.debug("NewObjectV clazz={}, jmethodID={}, va_list={}, lr={}", dvmClass, jmethodID, va_list, context.getLRPointer());
                 }
@@ -440,7 +440,7 @@ public class DalvikVM64 extends BaseVM implements VM {
                 UnidbgPointer jmethodID = context.getPointerArg(2);
                 UnidbgPointer jvalue = context.getPointerArg(3);
                 DvmClass dvmClass = classMap.get(clazz.toIntPeer());
-                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getMethod(jmethodID.toIntPeer());
+                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getMethod(jmethodID.peer);
                 if (log.isDebugEnabled()) {
                     log.debug("NewObjectA clazz={}, jmethodID={}, jvalue={}, lr={}", dvmClass, jmethodID, jvalue, context.getLRPointer());
                 }
@@ -511,9 +511,9 @@ public class DalvikVM64 extends BaseVM implements VM {
                 if (dvmClass == null) {
                     throw new BackendException();
                 } else {
-                    int hash = dvmClass.getMethodID(name, args);
+                    long hash = dvmClass.getMethodID(name, args);
                     if (verbose && hash != 0) {
-                        System.out.printf("JNIEnv->GetMethodID(%s.%s%s) => 0x%x was called from %s%n", dvmClass.getClassName(), name, args, hash & 0xffffffffL, context.getLRPointer());
+                        System.out.printf("JNIEnv->GetMethodID(%s.%s%s) => 0x%x was called from %s%n", dvmClass.getClassName(), name, args, hash, context.getLRPointer());
                     }
                     return hash;
                 }
@@ -531,7 +531,7 @@ public class DalvikVM64 extends BaseVM implements VM {
                 }
                 DvmObject<?> dvmObject = getObject(object.toIntPeer());
                 DvmClass dvmClass = dvmObject == null ? null : dvmObject.getObjectType();
-                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getMethod(jmethodID.toIntPeer());
+                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getMethod(jmethodID.peer);
                 if (dvmMethod == null) {
                     throw new BackendException();
                 } else {
@@ -557,7 +557,7 @@ public class DalvikVM64 extends BaseVM implements VM {
                 }
                 DvmObject<?> dvmObject = getObject(object.toIntPeer());
                 DvmClass dvmClass = dvmObject == null ? null : dvmObject.getObjectType();
-                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getMethod(jmethodID.toIntPeer());
+                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getMethod(jmethodID.peer);
                 if (dvmMethod == null) {
                     throw new BackendException("dvmObject=" + dvmObject + ", dvmClass=" + dvmClass + ", jmethodID=" + jmethodID);
                 } else {
@@ -583,7 +583,7 @@ public class DalvikVM64 extends BaseVM implements VM {
                 }
                 DvmObject<?> dvmObject = getObject(object.toIntPeer());
                 DvmClass dvmClass = dvmObject == null ? null : dvmObject.getObjectType();
-                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getMethod(jmethodID.toIntPeer());
+                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getMethod(jmethodID.peer);
                 if (dvmMethod == null) {
                     throw new BackendException("dvmObject=" + dvmObject + ", dvmClass=" + dvmClass + ", jmethodID=" + jmethodID);
                 } else {
@@ -608,7 +608,7 @@ public class DalvikVM64 extends BaseVM implements VM {
                 }
                 DvmObject<?> dvmObject = getObject(object.toIntPeer());
                 DvmClass dvmClass = dvmObject == null ? null : dvmObject.getObjectType();
-                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getMethod(jmethodID.toIntPeer());
+                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getMethod(jmethodID.peer);
                 if (dvmMethod == null) {
                     throw new BackendException();
                 } else {
@@ -634,7 +634,7 @@ public class DalvikVM64 extends BaseVM implements VM {
                 }
                 DvmObject<?> dvmObject = getObject(object.toIntPeer());
                 DvmClass dvmClass = dvmObject == null ? null : dvmObject.getObjectType();
-                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getMethod(jmethodID.toIntPeer());
+                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getMethod(jmethodID.peer);
                 if (dvmMethod == null) {
                     throw new BackendException();
                 } else {
@@ -660,7 +660,7 @@ public class DalvikVM64 extends BaseVM implements VM {
                 }
                 DvmObject<?> dvmObject = getObject(object.toIntPeer());
                 DvmClass dvmClass = dvmObject == null ? null : dvmObject.getObjectType();
-                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getMethod(jmethodID.toIntPeer());
+                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getMethod(jmethodID.peer);
                 if (dvmMethod == null) {
                     throw new BackendException();
                 } else {
@@ -693,7 +693,7 @@ public class DalvikVM64 extends BaseVM implements VM {
                 }
                 DvmObject<?> dvmObject = getObject(object.toIntPeer());
                 DvmClass dvmClass = dvmObject == null ? null : dvmObject.getObjectType();
-                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getMethod(jmethodID.toIntPeer());
+                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getMethod(jmethodID.peer);
                 if (dvmMethod == null) {
                     throw new BackendException();
                 } else {
@@ -754,7 +754,7 @@ public class DalvikVM64 extends BaseVM implements VM {
                 }
                 DvmObject<?> dvmObject = getObject(object.toIntPeer());
                 DvmClass dvmClass = dvmObject == null ? null : dvmObject.getObjectType();
-                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getMethod(jmethodID.toIntPeer());
+                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getMethod(jmethodID.peer);
                 if (dvmMethod == null) {
                     throw new BackendException();
                 } else {
@@ -786,7 +786,7 @@ public class DalvikVM64 extends BaseVM implements VM {
                 }
                 DvmObject<?> dvmObject = getObject(object.toIntPeer());
                 DvmClass dvmClass = dvmObject == null ? null : dvmObject.getObjectType();
-                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getMethod(jmethodID.toIntPeer());
+                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getMethod(jmethodID.peer);
                 if (dvmMethod == null) {
                     throw new BackendException();
                 } else {
@@ -812,7 +812,7 @@ public class DalvikVM64 extends BaseVM implements VM {
                 }
                 DvmObject<?> dvmObject = getObject(object.toIntPeer());
                 DvmClass dvmClass = dvmObject == null ? null : dvmObject.getObjectType();
-                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getMethod(jmethodID.toIntPeer());
+                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getMethod(jmethodID.peer);
                 if (dvmMethod == null) {
                     throw new BackendException();
                 } else {
@@ -838,7 +838,7 @@ public class DalvikVM64 extends BaseVM implements VM {
                 }
                 DvmObject<?> dvmObject = getObject(object.toIntPeer());
                 DvmClass dvmClass = dvmObject == null ? null : dvmObject.getObjectType();
-                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getMethod(jmethodID.toIntPeer());
+                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getMethod(jmethodID.peer);
                 if (dvmMethod == null) {
                     throw new BackendException();
                 } else {
@@ -863,7 +863,7 @@ public class DalvikVM64 extends BaseVM implements VM {
                 }
                 DvmObject<?> dvmObject = getObject(object.toIntPeer());
                 DvmClass dvmClass = dvmObject == null ? null : dvmObject.getObjectType();
-                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getMethod(jmethodID.toIntPeer());
+                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getMethod(jmethodID.peer);
                 if (dvmMethod == null) {
                     throw new BackendException();
                 } else {
@@ -889,7 +889,7 @@ public class DalvikVM64 extends BaseVM implements VM {
                 }
                 DvmObject<?> dvmObject = getObject(object.toIntPeer());
                 DvmClass dvmClass = dvmObject == null ? null : dvmObject.getObjectType();
-                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getMethod(jmethodID.toIntPeer());
+                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getMethod(jmethodID.peer);
                 if (dvmMethod == null) {
                     throw new BackendException();
                 } else {
@@ -915,7 +915,7 @@ public class DalvikVM64 extends BaseVM implements VM {
                 }
                 DvmObject<?> dvmObject = getObject(object.toIntPeer());
                 DvmClass dvmClass = dvmObject == null ? null : dvmObject.getObjectType();
-                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getMethod(jmethodID.toIntPeer());
+                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getMethod(jmethodID.peer);
                 if (dvmMethod == null) {
                     throw new BackendException();
                 } else {
@@ -948,7 +948,7 @@ public class DalvikVM64 extends BaseVM implements VM {
                 }
                 DvmObject<?> dvmObject = getObject(object.toIntPeer());
                 DvmClass dvmClass = dvmObject == null ? null : dvmObject.getObjectType();
-                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getMethod(jmethodID.toIntPeer());
+                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getMethod(jmethodID.peer);
                 if (dvmMethod == null) {
                     throw new BackendException();
                 } else {
@@ -984,7 +984,7 @@ public class DalvikVM64 extends BaseVM implements VM {
                 }
                 DvmObject<?> dvmObject = getObject(object.toIntPeer());
                 DvmClass dvmClass = dvmObject == null ? null : dvmObject.getObjectType();
-                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getMethod(jmethodID.toIntPeer());
+                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getMethod(jmethodID.peer);
                 if (dvmMethod == null) {
                     throw new BackendException();
                 } else {
@@ -1021,7 +1021,7 @@ public class DalvikVM64 extends BaseVM implements VM {
                 }
                 DvmObject<?> dvmObject = getObject(object.toIntPeer());
                 DvmClass dvmClass = dvmObject == null ? null : dvmObject.getObjectType();
-                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getMethod(jmethodID.toIntPeer());
+                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getMethod(jmethodID.peer);
                 if (dvmMethod == null) {
                     throw new BackendException("dvmObject=" + dvmObject + ", dvmClass=" + dvmClass + ", jmethodID=" + jmethodID);
                 } else {
@@ -1050,7 +1050,7 @@ public class DalvikVM64 extends BaseVM implements VM {
                 }
                 DvmObject<?> dvmObject = getObject(object.toIntPeer());
                 DvmClass dvmClass = dvmObject == null ? null : dvmObject.getObjectType();
-                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getMethod(jmethodID.toIntPeer());
+                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getMethod(jmethodID.peer);
                 if (dvmMethod == null) {
                     throw new BackendException();
                 } else {
@@ -1076,7 +1076,7 @@ public class DalvikVM64 extends BaseVM implements VM {
                 }
                 DvmObject<?> dvmObject = getObject(object.toIntPeer());
                 DvmClass dvmClass = dvmObject == null ? null : dvmObject.getObjectType();
-                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getMethod(jmethodID.toIntPeer());
+                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getMethod(jmethodID.peer);
                 if (dvmMethod == null) {
                     throw new BackendException();
                 } else {
@@ -1102,7 +1102,7 @@ public class DalvikVM64 extends BaseVM implements VM {
                 }
                 DvmObject<?> dvmObject = getObject(object.toIntPeer());
                 DvmClass dvmClass = dvmObject == null ? null : dvmObject.getObjectType();
-                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getMethod(jmethodID.toIntPeer());
+                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getMethod(jmethodID.peer);
                 if (dvmMethod == null) {
                     throw new BackendException();
                 } else {
@@ -1164,7 +1164,7 @@ public class DalvikVM64 extends BaseVM implements VM {
                 }
                 DvmObject<?> dvmObject = getObject(object.toIntPeer());
                 DvmClass dvmClass = classMap.get(clazz.toIntPeer());
-                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getMethod(jmethodID.toIntPeer());
+                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getMethod(jmethodID.peer);
                 if (dvmMethod == null) {
                     throw new BackendException();
                 } else {
@@ -1348,7 +1348,7 @@ public class DalvikVM64 extends BaseVM implements VM {
                 }
                 DvmObject<?> dvmObject = getObject(object.toIntPeer());
                 DvmClass dvmClass = classMap.get(clazz.toIntPeer());
-                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getMethod(jmethodID.toIntPeer());
+                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getMethod(jmethodID.peer);
                 if (dvmMethod == null) {
                     throw new BackendException();
                 } else {
@@ -1380,7 +1380,7 @@ public class DalvikVM64 extends BaseVM implements VM {
                 }
                 DvmObject<?> dvmObject = getObject(object.toIntPeer());
                 DvmClass dvmClass = classMap.get(clazz.toIntPeer());
-                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getMethod(jmethodID.toIntPeer());
+                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getMethod(jmethodID.peer);
                 if (dvmMethod == null) {
                     throw new BackendException();
                 } else {
@@ -1415,9 +1415,9 @@ public class DalvikVM64 extends BaseVM implements VM {
                 if (dvmClass == null) {
                     throw new BackendException();
                 } else {
-                    int hash = dvmClass.getFieldID(name, args);
+                    long hash = dvmClass.getFieldID(name, args);
                     if (verbose && hash != 0) {
-                        System.out.printf("JNIEnv->GetFieldID(%s.%s %s) => 0x%x was called from %s%n", dvmClass.getClassName(), name, args, hash & 0xffffffffL, context.getLRPointer());
+                        System.out.printf("JNIEnv->GetFieldID(%s.%s %s) => 0x%x was called from %s%n", dvmClass.getClassName(), name, args, hash, context.getLRPointer());
                     }
                     return hash;
                 }
@@ -1790,9 +1790,9 @@ public class DalvikVM64 extends BaseVM implements VM {
                 if (dvmClass == null) {
                     throw new BackendException();
                 } else {
-                    int hash = dvmClass.getStaticMethodID(name, args);
+                    long hash = dvmClass.getStaticMethodID(name, args);
                     if (verbose && hash != 0) {
-                        System.out.printf("JNIEnv->GetStaticMethodID(%s.%s%s) => 0x%x was called from %s%n", dvmClass.getClassName(), name, args, hash & 0xffffffffL, context.getLRPointer());
+                        System.out.printf("JNIEnv->GetStaticMethodID(%s.%s%s) => 0x%x was called from %s%n", dvmClass.getClassName(), name, args, hash, context.getLRPointer());
                     }
                     return hash;
                 }
@@ -1809,7 +1809,7 @@ public class DalvikVM64 extends BaseVM implements VM {
                     log.debug("CallStaticObjectMethod clazz={}, jmethodID={}", clazz, jmethodID);
                 }
                 DvmClass dvmClass = classMap.get(clazz.toIntPeer());
-                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getStaticMethod(jmethodID.toIntPeer());
+                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getStaticMethod(jmethodID.peer);
                 if (dvmMethod == null) {
                     throw new BackendException();
                 } else {
@@ -1834,7 +1834,7 @@ public class DalvikVM64 extends BaseVM implements VM {
                     log.debug("CallStaticObjectMethodV clazz={}, jmethodID={}, va_list={}", clazz, jmethodID, va_list);
                 }
                 DvmClass dvmClass = classMap.get(clazz.toIntPeer());
-                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getStaticMethod(jmethodID.toIntPeer());
+                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getStaticMethod(jmethodID.peer);
                 if (dvmMethod == null) {
                     throw new BackendException();
                 } else {
@@ -1859,7 +1859,7 @@ public class DalvikVM64 extends BaseVM implements VM {
                     log.debug("CallStaticObjectMethodA clazz={}, jmethodID={}, jvalue={}", clazz, jmethodID, jvalue);
                 }
                 DvmClass dvmClass = classMap.get(clazz.toIntPeer());
-                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getStaticMethod(jmethodID.toIntPeer());
+                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getStaticMethod(jmethodID.peer);
                 if (dvmMethod == null) {
                     throw new BackendException();
                 } else {
@@ -1883,7 +1883,7 @@ public class DalvikVM64 extends BaseVM implements VM {
                     log.debug("CallStaticBooleanMethod clazz={}, jmethodID={}", clazz, jmethodID);
                 }
                 DvmClass dvmClass = classMap.get(clazz.toIntPeer());
-                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getStaticMethod(jmethodID.toIntPeer());
+                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getStaticMethod(jmethodID.peer);
                 if (dvmMethod == null) {
                     throw new BackendException();
                 } else {
@@ -1908,7 +1908,7 @@ public class DalvikVM64 extends BaseVM implements VM {
                     log.debug("CallStaticBooleanMethodV clazz={}, jmethodID={}, va_list={}", clazz, jmethodID, va_list);
                 }
                 DvmClass dvmClass = classMap.get(clazz.toIntPeer());
-                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getStaticMethod(jmethodID.toIntPeer());
+                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getStaticMethod(jmethodID.peer);
                 if (dvmMethod == null) {
                     throw new BackendException();
                 } else {
@@ -1933,7 +1933,7 @@ public class DalvikVM64 extends BaseVM implements VM {
                     log.debug("CallStaticBooleanMethodA clazz={}, jmethodID={}, jvalue={}", clazz, jmethodID, jvalue);
                 }
                 DvmClass dvmClass = classMap.get(clazz.toIntPeer());
-                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getStaticMethod(jmethodID.toIntPeer());
+                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getStaticMethod(jmethodID.peer);
                 if (dvmMethod == null) {
                     throw new BackendException();
                 } else {
@@ -2020,7 +2020,7 @@ public class DalvikVM64 extends BaseVM implements VM {
                     log.debug("CallStaticIntMethodV clazz={}, jmethodID={}", clazz, jmethodID);
                 }
                 DvmClass dvmClass = classMap.get(clazz.toIntPeer());
-                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getStaticMethod(jmethodID.toIntPeer());
+                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getStaticMethod(jmethodID.peer);
                 if (dvmMethod == null) {
                     throw new BackendException();
                 } else {
@@ -2045,7 +2045,7 @@ public class DalvikVM64 extends BaseVM implements VM {
                     log.debug("CallStaticIntMethodV clazz={}, jmethodID={}, va_list={}", clazz, jmethodID, va_list);
                 }
                 DvmClass dvmClass = classMap.get(clazz.toIntPeer());
-                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getStaticMethod(jmethodID.toIntPeer());
+                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getStaticMethod(jmethodID.peer);
                 if (dvmMethod == null) {
                     throw new BackendException();
                 } else {
@@ -2070,7 +2070,7 @@ public class DalvikVM64 extends BaseVM implements VM {
                     log.debug("CallStaticIntMethodA clazz={}, jmethodID={}, jvalue={}", clazz, jmethodID, jvalue);
                 }
                 DvmClass dvmClass = classMap.get(clazz.toIntPeer());
-                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getStaticMethod(jmethodID.toIntPeer());
+                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getStaticMethod(jmethodID.peer);
                 if (dvmMethod == null) {
                     throw new BackendException();
                 } else {
@@ -2094,7 +2094,7 @@ public class DalvikVM64 extends BaseVM implements VM {
                     log.debug("CallStaticLongMethod clazz={}, jmethodID={}", clazz, jmethodID);
                 }
                 DvmClass dvmClass = classMap.get(clazz.toIntPeer());
-                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getStaticMethod(jmethodID.toIntPeer());
+                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getStaticMethod(jmethodID.peer);
                 if (dvmMethod == null) {
                     throw new BackendException();
                 } else {
@@ -2119,7 +2119,7 @@ public class DalvikVM64 extends BaseVM implements VM {
                     log.debug("CallStaticLongMethodV clazz={}, jmethodID={}, va_list={}, lr={}", clazz, jmethodID, va_list, context.getLRPointer());
                 }
                 DvmClass dvmClass = classMap.get(clazz.toIntPeer());
-                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getStaticMethod(jmethodID.toIntPeer());
+                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getStaticMethod(jmethodID.peer);
                 if (dvmMethod == null) {
                     throw new BackendException();
                 } else {
@@ -2144,7 +2144,7 @@ public class DalvikVM64 extends BaseVM implements VM {
                     log.debug("CallStaticLongMethodA clazz={}, jmethodID={}, jvalue={}", clazz, jmethodID, jvalue);
                 }
                 DvmClass dvmClass = classMap.get(clazz.toIntPeer());
-                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getStaticMethod(jmethodID.toIntPeer());
+                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getStaticMethod(jmethodID.peer);
                 if (dvmMethod == null) {
                     throw new BackendException();
                 } else {
@@ -2168,7 +2168,7 @@ public class DalvikVM64 extends BaseVM implements VM {
                     log.debug("CallStaticFloatMethod clazz={}, jmethodID={}", clazz, jmethodID);
                 }
                 DvmClass dvmClass = classMap.get(clazz.toIntPeer());
-                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getStaticMethod(jmethodID.toIntPeer());
+                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getStaticMethod(jmethodID.peer);
                 if (dvmMethod == null) {
                     throw new BackendException();
                 } else {
@@ -2210,7 +2210,7 @@ public class DalvikVM64 extends BaseVM implements VM {
                     log.debug("CallStaticDoubleMethod clazz={}, jmethodID={}", clazz, jmethodID);
                 }
                 DvmClass dvmClass = classMap.get(clazz.toIntPeer());
-                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getStaticMethod(jmethodID.toIntPeer());
+                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getStaticMethod(jmethodID.peer);
                 if (dvmMethod == null) {
                     throw new BackendException();
                 } else {
@@ -2252,7 +2252,7 @@ public class DalvikVM64 extends BaseVM implements VM {
                     log.debug("CallStaticVoidMethod clazz={}, jmethodID={}", clazz, jmethodID);
                 }
                 DvmClass dvmClass = classMap.get(clazz.toIntPeer());
-                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getStaticMethod(jmethodID.toIntPeer());
+                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getStaticMethod(jmethodID.peer);
                 if (dvmMethod == null) {
                     throw new BackendException();
                 } else {
@@ -2277,7 +2277,7 @@ public class DalvikVM64 extends BaseVM implements VM {
                     log.debug("CallStaticVoidMethodV clazz={}, jmethodID={}, va_list={}", clazz, jmethodID, va_list);
                 }
                 DvmClass dvmClass = classMap.get(clazz.toIntPeer());
-                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getStaticMethod(jmethodID.toIntPeer());
+                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getStaticMethod(jmethodID.peer);
                 if (dvmMethod == null) {
                     throw new BackendException();
                 } else {
@@ -2302,7 +2302,7 @@ public class DalvikVM64 extends BaseVM implements VM {
                     log.debug("CallStaticVoidMethodA clazz={}, jmethodID={}, jvalue={}", clazz, jmethodID, jvalue);
                 }
                 DvmClass dvmClass = classMap.get(clazz.toIntPeer());
-                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getStaticMethod(jmethodID.toIntPeer());
+                DvmMethod dvmMethod = dvmClass == null ? null : dvmClass.getStaticMethod(jmethodID.peer);
                 if (dvmMethod == null) {
                     throw new BackendException();
                 } else {
@@ -2332,9 +2332,9 @@ public class DalvikVM64 extends BaseVM implements VM {
                 if (dvmClass == null) {
                     throw new BackendException();
                 } else {
-                    int hash = dvmClass.getStaticFieldID(name, args);
+                    long hash = dvmClass.getStaticFieldID(name, args);
                     if (verbose && hash != 0) {
-                        System.out.printf("JNIEnv->GetStaticFieldID(%s.%s%s) => 0x%x was called from %s%n", dvmClass.getClassName(), name, args, hash & 0xffffffffL, context.getLRPointer());
+                        System.out.printf("JNIEnv->GetStaticFieldID(%s.%s%s) => 0x%x was called from %s%n", dvmClass.getClassName(), name, args, hash, context.getLRPointer());
                     }
                     return hash;
                 }
