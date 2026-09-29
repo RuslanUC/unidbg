@@ -1185,6 +1185,7 @@ public class ARM64SyscallHandler extends AndroidSyscallHandler {
     }
 
     private static final int PR_SET_NAME = 15;
+    private static final int PR_GET_NAME = 16;
     private static final int PR_SET_NO_NEW_PRIVS = 38;
     private static final int PR_SET_THP_DISABLE = 41;
     private static final int BIONIC_PR_SET_VMA = 0x53564d41;
@@ -1220,6 +1221,8 @@ public class ARM64SyscallHandler extends AndroidSyscallHandler {
                 return 0;
             case PR_SET_NO_NEW_PRIVS:
             case PR_SET_THP_DISABLE:
+                return 0;
+            case PR_GET_NAME:
                 return 0;
             default:
                 throw new UnsupportedOperationException("option=" + option);
