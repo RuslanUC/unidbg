@@ -31,6 +31,7 @@ import com.github.unidbg.linux.struct.RLimit64;
 import com.github.unidbg.linux.struct.Stat64;
 import com.github.unidbg.linux.thread.MarshmallowThread;
 import com.github.unidbg.memory.Memory;
+import com.github.unidbg.memory.MemoryMap;
 import com.github.unidbg.memory.SvcMemory;
 import com.github.unidbg.pointer.UnidbgPointer;
 import com.github.unidbg.thread.PopContextException;
@@ -46,6 +47,7 @@ import org.slf4j.LoggerFactory;
 import unicorn.Arm64Const;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -406,6 +408,9 @@ public class ARM64SyscallHandler extends AndroidSyscallHandler {
                     return;
                 case 48:
                     backend.reg_write(Arm64Const.UC_ARM64_REG_X0, faccessat(emulator));
+                    return;
+                case 232:
+                    backend.reg_write(Arm64Const.UC_ARM64_REG_X0, mincore(emulator));
                     return;
             }
         } catch (StopEmulatorException e) {
@@ -1612,6 +1617,100 @@ public class ARM64SyscallHandler extends AndroidSyscallHandler {
         _new = (AndroidFileIO) old.dup2();
         fdMap.put(newfd, _new);
         return newfd;
+    }
+
+    private int mincore(Emulator<?> emulator) {
+        RegisterContext context = emulator.getContext();
+
+        long addr = context.getLongArg(0);
+        long length = context.getLongArg(1);
+        UnidbgPointer vec = context.getPointerArg(2);
+
+        final long pageSize = emulator.getPageAlign();
+
+        if (log.isDebugEnabled()) {
+            log.debug("mincore addr=0x{}, length=0x{}, vec={}", Long.toHexString(addr), Long.toHexString(length), vec);
+        }
+
+        if ((addr & (pageSize - 1)) != 0) {
+            emulator.getMemory().setErrno(UnixEmulator.EINVAL);
+            return -UnixEmulator.EINVAL;
+        }
+
+        if (length < 0) {
+            emulator.getMemory().setErrno(UnixEmulator.ENOMEM);
+            return -UnixEmulator.ENOMEM;
+        }
+
+        if (length == 0) {
+            return 0;
+        }
+
+        if (length > Long.MAX_VALUE - (pageSize - 1)) {
+            emulator.getMemory().setErrno(UnixEmulator.ENOMEM);
+            return -UnixEmulator.ENOMEM;
+        }
+
+        long pages = (length + pageSize - 1) / pageSize;
+
+        if (vec == null) {
+            emulator.getMemory().setErrno(UnixEmulator.EFAULT);
+            return -UnixEmulator.EFAULT;
+        }
+
+        long rangeEnd = addr + length;
+        if (rangeEnd < addr) {
+            emulator.getMemory().setErrno(UnixEmulator.ENOMEM);
+            return -UnixEmulator.ENOMEM;
+        }
+
+        if (!isMappedRange(emulator, addr, addr + pages * pageSize)) {
+            emulator.getMemory().setErrno(UnixEmulator.ENOMEM);
+            return -UnixEmulator.ENOMEM;
+        }
+
+        if (!isMappedRange(emulator, vec.peer, vec.peer + pages)) {
+            emulator.getMemory().setErrno(UnixEmulator.EFAULT);
+            return -UnixEmulator.EFAULT;
+        }
+
+        for (long i = 0; i < pages; i++) {
+            vec.setByte(i, (byte) 1);
+        }
+
+        return 0;
+    }
+
+    private boolean isMappedRange(Emulator<?> emulator,long start,long end) {
+        if (end <= start) {
+            return true;
+        }
+
+        long pos = start;
+
+        List<MemoryMap> maps = new ArrayList<>(emulator.getMemory().getMemoryMap());
+        maps.sort(Comparator.comparingLong(m -> m.base));
+
+        for (MemoryMap map : maps) {
+            long mapStart = map.base;
+            long mapEnd = map.base + map.size;
+
+            if (mapEnd <= pos) {
+                continue;
+            }
+
+            if (mapStart > pos) {
+                return false;
+            }
+
+            pos = Math.max(pos, mapEnd);
+
+            if (pos >= end) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     @Override
