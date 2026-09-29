@@ -58,10 +58,21 @@ public class ARM64SyscallHandler extends AndroidSyscallHandler {
 
     private final SvcMemory svcMemory;
 
+    private int uid;
+    private int gid;
+
     public ARM64SyscallHandler(SvcMemory svcMemory) {
         super();
 
         this.svcMemory = svcMemory;
+    }
+
+    public void setUid(int uid) {
+        this.uid = uid;
+    }
+
+    public void setGid(int gid) {
+        this.gid = gid;
     }
 
     @SuppressWarnings("unchecked")
@@ -287,7 +298,11 @@ public class ARM64SyscallHandler extends AndroidSyscallHandler {
                     return;
                 case 174: // getuid
                 case 175: // geteuid
-                    backend.reg_write(Arm64Const.UC_ARM64_REG_X0, 0);
+                    backend.reg_write(Arm64Const.UC_ARM64_REG_X0, uid);
+                    return;
+                case 176: // setgid
+                case 177: // setegid
+                    backend.reg_write(Arm64Const.UC_ARM64_REG_X0, gid);
                     return;
                 case 200:
                     backend.reg_write(Arm64Const.UC_ARM64_REG_X0, bind(emulator));
