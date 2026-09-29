@@ -1799,9 +1799,9 @@ public class DalvikVM64 extends BaseVM implements VM {
             }
         });
 
-        Pointer _CallStaticObjectMethod = svcMemory.registerSvc(new Arm64Svc() {
+        Pointer _CallStaticObjectMethod = svcMemory.registerSvc(new Arm64Hook() {
             @Override
-            public long handle(Emulator<?> emulator) {
+            protected HookStatus hook(Emulator<?> emulator) throws NestedRun {
                 RegisterContext context = emulator.getContext();
                 UnidbgPointer clazz = context.getPointerArg(1);
                 UnidbgPointer jmethodID = context.getPointerArg(2);
@@ -1818,7 +1818,7 @@ public class DalvikVM64 extends BaseVM implements VM {
                     if (verbose || verboseMethodOperation) {
                         System.out.printf("JNIEnv->CallStaticObjectMethod(%s, %s(%s) => %s) was called from %s%n", dvmClass, dvmMethod.methodName, varArg.formatArgs(), obj, context.getLRPointer());
                     }
-                    return addLocalObject(obj);
+                    return HookStatus.LR(emulator, addLocalObject(obj));
                 }
             }
         });
@@ -2010,9 +2010,9 @@ public class DalvikVM64 extends BaseVM implements VM {
             }
         });
 
-        Pointer _CallStaticIntMethod = svcMemory.registerSvc(new Arm64Svc() {
+        Pointer _CallStaticIntMethod = svcMemory.registerSvc(new Arm64Hook() {
             @Override
-            public long handle(Emulator<?> emulator) {
+            protected HookStatus hook(Emulator<?> emulator) throws NestedRun {
                 RegisterContext context = emulator.getContext();
                 UnidbgPointer clazz = context.getPointerArg(1);
                 UnidbgPointer jmethodID = context.getPointerArg(2);
@@ -2029,7 +2029,7 @@ public class DalvikVM64 extends BaseVM implements VM {
                     if (verbose || verboseMethodOperation) {
                         System.out.printf("JNIEnv->CallStaticIntMethod(%s, %s(%s) => 0x%x) was called from %s%n", dvmClass, dvmMethod.methodName, varArg.formatArgs(), ret, context.getLRPointer());
                     }
-                    return ret;
+                    return HookStatus.LR(emulator, ret);
                 }
             }
         });
@@ -2242,9 +2242,9 @@ public class DalvikVM64 extends BaseVM implements VM {
             }
         });
 
-        Pointer _CallStaticVoidMethod = svcMemory.registerSvc(new Arm64Svc() {
+        Pointer _CallStaticVoidMethod = svcMemory.registerSvc(new Arm64Hook() {
             @Override
-            public long handle(Emulator<?> emulator) {
+            protected HookStatus hook(Emulator<?> emulator) throws NestedRun {
                 RegisterContext context = emulator.getContext();
                 UnidbgPointer clazz = context.getPointerArg(1);
                 UnidbgPointer jmethodID = context.getPointerArg(2);
@@ -2261,7 +2261,7 @@ public class DalvikVM64 extends BaseVM implements VM {
                     if (verbose || verboseMethodOperation) {
                         System.out.printf("JNIEnv->CallStaticVoidMethod(%s, %s(%s)) was called from %s%n", dvmClass, dvmMethod.methodName, varArg.formatArgs(), context.getLRPointer());
                     }
-                    return 0;
+                    return HookStatus.LR(emulator, 0);
                 }
             }
         });
