@@ -73,8 +73,16 @@ public class ARM64SyscallHandler extends AndroidSyscallHandler {
         this.uid = uid;
     }
 
+    public int getUid() {
+        return uid;
+    }
+
     public void setGid(int gid) {
         this.gid = gid;
+    }
+
+    public int getGid() {
+        return gid;
     }
 
     @SuppressWarnings("unchecked")
