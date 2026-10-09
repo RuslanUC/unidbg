@@ -116,6 +116,11 @@ public class UnicornBackend extends AbstractBackend implements Backend {
 
     @Override
     public void mem_unmap(long address, long size) throws BackendException {
+        if ((address & 0xffff000000000000L) != 0) {
+            // Same guard as DynarmicBackend: never hand non-canonical
+            // addresses to native code, which aborts instead of failing.
+            throw new BackendException("mem_unmap non-canonical address=0x" + Long.toHexString(address));
+        }
         try {
             unicorn.mem_unmap(address, size);
         } catch (UnicornException e) {

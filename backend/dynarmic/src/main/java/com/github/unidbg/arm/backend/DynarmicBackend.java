@@ -137,6 +137,12 @@ public abstract class DynarmicBackend extends FastBackend implements Backend, Dy
 
     @Override
     public void mem_unmap(long address, long size) throws BackendException {
+        if ((address & 0xffff000000000000L) != 0) {
+            // Non-canonical address (tagged/garbage pointer from the guest):
+            // the native call would abort the process instead of failing
+            // cleanly with an exception the syscall layer can translate.
+            throw new BackendException("mem_unmap non-canonical address=0x" + Long.toHexString(address));
+        }
         try {
             dynarmic.mem_unmap(address, size);
         } catch (DynarmicException e) {
