@@ -35,6 +35,7 @@ import com.github.unidbg.memory.MemoryMap;
 import com.github.unidbg.memory.SvcMemory;
 import com.github.unidbg.pointer.UnidbgPointer;
 import com.github.unidbg.thread.PopContextException;
+import com.github.unidbg.thread.RunnableTask;
 import com.github.unidbg.thread.Task;
 import com.github.unidbg.thread.ThreadContextSwitchException;
 import com.github.unidbg.unix.IO;
@@ -46,9 +47,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import unicorn.Arm64Const;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -83,6 +84,44 @@ public class ARM64SyscallHandler extends AndroidSyscallHandler {
 
     public int getGid() {
         return gid;
+    }
+
+    private static final int TASK_COMM_LEN = 16;
+
+    private final Map<Integer, byte[]> threadNames = new ConcurrentHashMap<>();
+
+    private static int currentTid(Emulator<?> emulator) {
+        RunnableTask task = emulator.getThreadDispatcher().getRunningTask();
+        if (task instanceof Task) {
+            return ((Task) task).getId();
+        }
+        return emulator.getPid();
+    }
+
+    private static byte[] truncateComm(String name) {
+        if (name == null) {
+            return new byte[0];
+        }
+        byte[] bytes = name.getBytes(StandardCharsets.UTF_8);
+        return bytes.length > TASK_COMM_LEN - 1 ? Arrays.copyOf(bytes, TASK_COMM_LEN - 1) : bytes;
+    }
+
+    private static byte[] defaultComm(String processName) {
+        if (processName == null) {
+            return new byte[0];
+        }
+        byte[] bytes = processName.getBytes(StandardCharsets.UTF_8);
+        return bytes.length > TASK_COMM_LEN - 1
+                ? Arrays.copyOfRange(bytes, bytes.length - (TASK_COMM_LEN - 1), bytes.length)
+                : bytes;
+    }
+
+    private byte[] getComm(int tid, Emulator<?> emulator) {
+        byte[] comm = threadNames.get(tid);
+        if (comm != null) {
+            return comm;
+        }
+        return defaultComm(emulator.getProcessName());
     }
 
     @SuppressWarnings("unchecked")
@@ -1212,12 +1251,15 @@ public class ARM64SyscallHandler extends AndroidSyscallHandler {
             log.debug("prctl option=0x{}, arg2=0x{}, task={}", Integer.toHexString(option), Long.toHexString(arg2), emulator.getThreadDispatcher().getRunningTask());
         }
         switch (option) {
-            case PR_SET_NAME:
+            case PR_SET_NAME: {
                 Pointer threadName = context.getPointerArg(1);
+                String name = threadName == null ? "" : threadName.getString(0);
+                threadNames.put(currentTid(emulator), truncateComm(name));
                 if (log.isDebugEnabled()) {
-                    log.debug("prctl set thread name: {}", threadName.getString(0));
+                    log.debug("prctl set thread name: {}", name);
                 }
                 return 0;
+            }
             case BIONIC_PR_SET_VMA:
                 Pointer addr = context.getPointerArg(2);
                 int len = context.getIntArg(3);
@@ -1235,8 +1277,17 @@ public class ARM64SyscallHandler extends AndroidSyscallHandler {
             case PR_SET_NO_NEW_PRIVS:
             case PR_SET_THP_DISABLE:
                 return 0;
-            case PR_GET_NAME:
+            case PR_GET_NAME: {
+                Pointer buffer = context.getPointerArg(1);
+                byte[] comm = getComm(currentTid(emulator), emulator);
+                if (buffer != null) {
+                    buffer.write(0, Arrays.copyOf(comm, TASK_COMM_LEN), 0, TASK_COMM_LEN);
+                }
+                if (log.isDebugEnabled()) {
+                    log.debug("prctl get thread name: {}", new String(comm, StandardCharsets.UTF_8));
+                }
                 return 0;
+            }
             default:
                 throw new UnsupportedOperationException("option=" + option);
         }
