@@ -15,6 +15,7 @@ import com.github.unidbg.arm.context.RegisterContext;
 import com.github.unidbg.file.FileIO;
 import com.github.unidbg.file.FileResult;
 import com.github.unidbg.file.IOResolver;
+import com.github.unidbg.file.StatResolver;
 import com.github.unidbg.file.linux.AndroidFileIO;
 import com.github.unidbg.file.linux.IOConstants;
 import com.github.unidbg.linux.android.AndroidResolver;
@@ -774,6 +775,28 @@ public class ARM64SyscallHandler extends AndroidSyscallHandler {
     }
 
     protected int stat64(Emulator<AndroidFileIO> emulator, String pathname, Pointer statbuf) {
+        for (IOResolver<AndroidFileIO> resolver : getResolvers()) {
+            if (resolver instanceof StatResolver) {
+                @SuppressWarnings("unchecked")
+                FileResult<AndroidFileIO> statResult =
+                        ((StatResolver<AndroidFileIO>) resolver).resolveStat(emulator, pathname);
+                if (statResult == null) {
+                    continue;
+                }
+                if (statResult.isSuccess()) {
+                    try {
+                        return statResult.io.fstat(emulator, new Stat64(statbuf));
+                    } finally {
+                        try {
+                            statResult.io.close();
+                        } catch (Exception ignored) {
+                        }
+                    }
+                }
+                emulator.getMemory().setErrno(statResult.errno);
+                return -1;
+            }
+        }
         FileResult<AndroidFileIO> result = resolve(emulator, pathname, IOConstants.O_RDONLY);
         if (result != null && result.isSuccess()) {
             return result.io.fstat(emulator, new Stat64(statbuf));

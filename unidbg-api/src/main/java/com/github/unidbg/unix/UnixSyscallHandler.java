@@ -109,6 +109,10 @@ public abstract class UnixSyscallHandler<T extends NewFileIO> implements Syscall
         }
     }
 
+    protected final List<IOResolver<T>> getResolvers() {
+        return resolvers;
+    }
+
     protected final FileResult<T> resolve(Emulator<T> emulator, String pathname, int oflags) {
         FileResult<T> failResult = null;
         for (IOResolver<T> resolver : resolvers) {
