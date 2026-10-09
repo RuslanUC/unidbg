@@ -1196,7 +1196,26 @@ public class ARM64SyscallHandler extends AndroidSyscallHandler {
         long timeInMillis = System.currentTimeMillis();
         long start = backend.reg_read(Arm64Const.UC_ARM64_REG_X0).longValue();
         int length = backend.reg_read(Arm64Const.UC_ARM64_REG_X1).intValue();
-        emulator.getMemory().munmap(start, length);
+        if ((start & 0xffff000000000000L) != 0) {
+            // Non-canonical address (tagged/garbage pointer from the guest):
+            // the backend would abort natively instead of failing cleanly,
+            // so reject before reaching it, like the kernel does with EINVAL.
+            if (log.isDebugEnabled()) {
+                log.debug("munmap non-canonical start=0x{}, length={}", Long.toHexString(start), length);
+            }
+            return -UnixEmulator.EINVAL;
+        }
+        try {
+            emulator.getMemory().munmap(start, length);
+        } catch (BackendException e) {
+            // Unmapping an unknown region fails with EINVAL on a real kernel
+            // instead of killing the process; mirror that. No bookkeeping
+            // was mutated yet (AbstractLoader unmaps the backend first).
+            if (log.isDebugEnabled()) {
+                log.debug("munmap failed start=0x{}, length={}", Long.toHexString(start), length);
+            }
+            return -UnixEmulator.EINVAL;
+        }
         if (log.isDebugEnabled()) {
             log.debug("munmap start=0x{}, length={}, offset={}", Long.toHexString(start), length, System.currentTimeMillis() - timeInMillis);
         }

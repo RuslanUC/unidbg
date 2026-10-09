@@ -323,6 +323,11 @@ public abstract class AndroidSyscallHandler extends UnixSyscallHandler<AndroidFi
                 if (threadDispatcherEnabled && runningTask != null) {
                     if (timeSpec == null) {
                         runningTask.setWaiter(emulator, new FutexIndefinitelyWaiter(uaddr, val));
+                    } else if (timeSpec.toMillis() <= 0) {
+                        // Zero (or negative) timeout expires immediately on a
+                        // real kernel; without this FutexNanoSleepWaiter
+                        // throws for {0,0} timeouts. Same convention as below.
+                        throw new ThreadContextSwitchException().setReturnValue(-ETIMEDOUT);
                     } else {
                         runningTask.setWaiter(emulator, new FutexNanoSleepWaiter(uaddr, val, timeSpec));
                     }
@@ -760,6 +765,14 @@ public abstract class AndroidSyscallHandler extends UnixSyscallHandler<AndroidFi
         TimeSpec timeSpec = TimeSpec.createTimeSpec(emulator, req);
         if (log.isDebugEnabled()) {
             log.debug("nanosleep req={}, rem={}, timeSpec={}", req, rem, timeSpec);
+        }
+        if (timeSpec == null) {
+            return -UnixEmulator.EFAULT;
+        }
+        if (timeSpec.toMillis() <= 0) {
+            // Zero-length (or negative) sleep succeeds immediately on a real
+            // kernel; without this NanoSleepWaiter throws for {0,0} requests.
+            return 0;
         }
         RunnableTask runningTask = emulator.getThreadDispatcher().getRunningTask();
         if (threadDispatcherEnabled && runningTask != null) {

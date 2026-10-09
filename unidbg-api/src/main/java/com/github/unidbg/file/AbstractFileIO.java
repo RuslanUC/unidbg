@@ -125,7 +125,7 @@ public abstract class AbstractFileIO implements NewFileIO {
     }
 
     @Override
-    public final long mmap2(Emulator<?> emulator, long addr, int aligned, int prot, int offset, int length) throws IOException {
+    public long mmap2(Emulator<?> emulator, long addr, int aligned, int prot, int offset, int length) throws IOException {
         Backend backend = emulator.getBackend();
         byte[] data = getMmapData(addr, offset, length);
         backend.mem_map(addr, aligned, prot);

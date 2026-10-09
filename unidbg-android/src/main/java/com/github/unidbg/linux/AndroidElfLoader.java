@@ -808,6 +808,11 @@ public class AndroidElfLoader extends AbstractLoader<AndroidFileIO> implements M
                     log.debug("mmap2 addr=0x{}, mmapBaseAddress=0x{}", Long.toHexString(addr), Long.toHexString(mmapBaseAddress));
                 }
                 long ret = file.mmap2(emulator, addr, aligned, prot, offset, length);
+                if (ret < 0) {
+                    // FileIO-reported failure (e.g. mmap of a directory):
+                    // propagate the negative errno without recording a mapping.
+                    return ret;
+                }
                 if (mMapListener != null) {
                     mMapListener.onMap(addr, aligned, prot);
                 }
@@ -842,6 +847,11 @@ public class AndroidElfLoader extends AbstractLoader<AndroidFileIO> implements M
                     log.debug("mmap2 start=0x{}, mmapBaseAddress=0x{}, flags=0x{}, length=0x{}", Long.toHexString(start), Long.toHexString(mmapBaseAddress), Integer.toHexString(flags), Integer.toHexString(length));
                 }
                 long ret = file.mmap2(emulator, start, aligned, prot, offset, length);
+                if (ret < 0) {
+                    // FileIO-reported failure (e.g. mmap of a directory):
+                    // propagate the negative errno without recording a mapping.
+                    return ret;
+                }
                 if (mMapListener != null) {
                     mMapListener.onMap(start, aligned, prot);
                 }
