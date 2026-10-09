@@ -735,6 +735,31 @@ public abstract class AndroidSyscallHandler extends UnixSyscallHandler<AndroidFi
         return 0;
     }
 
+    /**
+     * {@code tkill(tid, sig)} targets a thread of the calling process, i.e.
+     * {@code tgkill(getpid(), tid, sig)}.
+     */
+    protected int tkill(Emulator<?> emulator) {
+        RegisterContext context = emulator.getContext();
+        int tid = context.getIntArg(0);
+        int sig = context.getIntArg(1);
+        if (log.isDebugEnabled()) {
+            log.debug("tkill tid={}, sig={}", tid, sig);
+        }
+        if (sig == 0) {
+            return 0;
+        }
+        if (sig < 0 || sig > 64) {
+            return -UnixEmulator.EINVAL;
+        }
+        SigAction action = sigActionMap.get(sig);
+        if (threadDispatcherEnabled &&
+                emulator.getThreadDispatcher().sendSignal(tid, sig, action == null || action.getSaHandler() == 0L ? null : new SignalTask(sig, action))) {
+            throw new ThreadContextSwitchException().setReturnValue(0);
+        }
+        return 0;
+    }
+
     protected int set_tid_address(Emulator<AndroidFileIO> emulator) {
         RegisterContext context = emulator.getContext();
         Pointer tidptr = context.getPointerArg(0);

@@ -569,16 +569,6 @@ public class ARM32SyscallHandler extends AndroidSyscallHandler {
         }
     }
 
-    private int tkill(Emulator<AndroidFileIO> emulator) {
-        RegisterContext context = emulator.getContext();
-        int tid = context.getIntArg(0);
-        int sig = context.getIntArg(1);
-        if (log.isDebugEnabled()) {
-            log.debug("tkill tid={}, sig={}", tid, sig);
-        }
-        return 0;
-    }
-
     private int setpgid(Emulator<AndroidFileIO> emulator) {
         RegisterContext context = emulator.getContext();
         int pid = context.getIntArg(0);

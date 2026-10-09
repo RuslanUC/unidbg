@@ -218,6 +218,9 @@ public class ARM64SyscallHandler extends AndroidSyscallHandler {
                 case 129:
                     backend.reg_write(Arm64Const.UC_ARM64_REG_X0, kill(emulator));
                     return;
+                case 130: // tkill
+                    backend.reg_write(Arm64Const.UC_ARM64_REG_X0, tkill(emulator));
+                    return;
                 case 29:
                     backend.reg_write(Arm64Const.UC_ARM64_REG_X0, ioctl(emulator));
                     return;
@@ -1192,10 +1195,15 @@ public class ARM64SyscallHandler extends AndroidSyscallHandler {
         emulator.getBackend().emu_stop();
     }
 
+    private static final boolean TRACE_MUNMAP = "1".equals(System.getenv("TRACE_MUNMAP"));
+
     private int munmap(Backend backend, Emulator<?> emulator) {
         long timeInMillis = System.currentTimeMillis();
         long start = backend.reg_read(Arm64Const.UC_ARM64_REG_X0).longValue();
         int length = backend.reg_read(Arm64Const.UC_ARM64_REG_X1).intValue();
+        if (TRACE_MUNMAP) {
+            System.err.printf("TRACE munmap start=0x%x length=0x%x%n", start, length);
+        }
         if ((start & 0xffff000000000000L) != 0) {
             // Non-canonical address (tagged/garbage pointer from the guest):
             // the backend would abort natively instead of failing cleanly,
