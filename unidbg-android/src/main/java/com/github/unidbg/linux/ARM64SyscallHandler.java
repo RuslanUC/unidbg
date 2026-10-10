@@ -255,6 +255,12 @@ public class ARM64SyscallHandler extends AndroidSyscallHandler {
                 case 63:
                     backend.reg_write(Arm64Const.UC_ARM64_REG_X0, read(backend, emulator));
                     return;
+                case 67:
+                    backend.reg_write(Arm64Const.UC_ARM64_REG_X0, pread64(emulator));
+                    return;
+                case 68:
+                    backend.reg_write(Arm64Const.UC_ARM64_REG_X0, pwrite64(emulator));
+                    return;
                 case 24:
                     backend.reg_write(Arm64Const.UC_ARM64_REG_X0, dup3(emulator));
                     return;
@@ -463,6 +469,14 @@ public class ARM64SyscallHandler extends AndroidSyscallHandler {
                 case 232:
                     backend.reg_write(Arm64Const.UC_ARM64_REG_X0, mincore(emulator));
                     return;
+                case 150: { // getresgid
+                    RegisterContext context = emulator.getContext();
+                    context.getPointerArg(0).setInt(0, gid);
+                    context.getPointerArg(1).setInt(0, gid);
+                    context.getPointerArg(2).setInt(0, gid);
+                    backend.reg_write(Arm64Const.UC_ARM64_REG_X0, 0);
+                    return;
+                }
             }
         } catch (StopEmulatorException e) {
             backend.emu_stop();
@@ -1699,6 +1713,47 @@ public class ARM64SyscallHandler extends AndroidSyscallHandler {
         Pointer buffer = UnidbgPointer.register(emulator, Arm64Const.UC_ARM64_REG_X1);
         int count = backend.reg_read(Arm64Const.UC_ARM64_REG_X2).intValue();
         return read(emulator, fd, buffer, count);
+    }
+
+    private int pread64(Emulator<?> emulator) {
+        RegisterContext context = emulator.getContext();
+        int fd = context.getIntArg(0);
+        Pointer buffer = context.getPointerArg(1);
+        int count = context.getIntArg(2);
+        long offset = context.getLongArg(3);
+        return pread(emulator, fd, buffer, count, offset);
+    }
+
+    private int pwrite64(Emulator<?> emulator) {
+        RegisterContext context = emulator.getContext();
+        int fd = context.getIntArg(0);
+        Pointer buffer = context.getPointerArg(1);
+        int count = context.getIntArg(2);
+        long offset = context.getLongArg(3);
+        if (log.isDebugEnabled()) {
+            log.debug("pwrite64 fd={}, buffer={}, count={}, offset={}", fd, buffer, count, offset);
+        }
+        // No positioned-write in FileIO: emulate with save/seek/write/restore.
+        FileIO file = fdMap.get(fd);
+        if (file == null) {
+            emulator.getMemory().setErrno(UnixEmulator.EBADF);
+            return -1;
+        }
+        UnidbgPointer pos = emulator.getMemory().allocateStack(emulator.getPointerSize());
+        try {
+            if (file.llseek(0, pos, FileIO.SEEK_CUR) < 0) {
+                return -1;
+            }
+            long saved = emulator.is32Bit() ? pos.getInt(0) : pos.getLong(0);
+            if (file.llseek(offset, pos, FileIO.SEEK_SET) < 0) {
+                return -1;
+            }
+            int written = write(emulator, fd, buffer, count);
+            file.llseek(saved, pos, FileIO.SEEK_SET);
+            return written;
+        } finally {
+            // Stack scratch; nothing to release.
+        }
     }
 
     private int dup3(Emulator<?> emulator) {
